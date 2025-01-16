@@ -30,14 +30,15 @@ if __name__ == '__main__':
     model = model.float()
     model = model.to(device)
     logger.info(f'Model total parameters: {sum(p.numel() for p in model.parameters()):,}')
-
+    logger.info(
+        f'Model Trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad):,}')
+    logger.info(
+        f'Model Non-trainable parameters: {sum(p.numel() for p in model.parameters() if p.requires_grad is False):,}')
     train_loader, valid_loader, test_loader = build_dataset(cfg,transform)
-    # if cfg.decoder.decoder_type=="lstm":
-    # model.load_state_dict(torch.load(
-    #     '/media/hpc/13CE9BF66AC0DE98/CX/VC/Tracker4Cap/result/checkpoints/msrvtt/Track_True_AGE_True_checkpoint_2024-07-03T18:08:35/clip_l14_epochs_1_lr_0.0002_max_objects_1.ckpt'))
-    # train_fn(cfg, model, train_loader, test_loader, device)
-    model.load_state_dict(torch.load('/media/hpc/13CE9BF66AC0DE98/CX/VC/Tracker4Cap/result/checkpoint/msvd/Fusion_ablation/B=128/clip_l14_epochs_3_lr_0.0002_max_objects_3.ckpt'), strict=False)
+    train_fn(cfg, model, train_loader, valid_loader, device)
+    model.load_state_dict(torch.load(cfg.train.save_checkpoints_path), strict=False)
     model.eval()
     test_fn(cfg, model, test_loader, device)
+
 
 # --fusion_object--fusion_action

@@ -47,6 +47,11 @@ def train_fn(cfgs: TotalConfigs, model: nn.Module, train_loader, valid_loader, d
             input_ids = input_ids.to(device)
             input_labels = input_labels.to(device)
             input_mask = input_mask.to(device)
+            # from fvcore.nn import FlopCountAnalysis
+            # flops = FlopCountAnalysis(model, (feature2ds, input_ids, input_mask))
+            # # print(f"FLOPs: {flops.total()}")
+            # print('FLOPs = ' + str(flops.total() / 1000 ** 3) + 'G')
+
             torch.cuda.synchronize()
             start_time = time.time()
             outputs = model(feature2ds, input_ids, input_mask)
