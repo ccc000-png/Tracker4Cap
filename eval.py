@@ -25,7 +25,6 @@ from typing import List, AnyStr
 from utils.profile import Timer
 from utils.train_utils import gather_object_multiple_gpu
 
-
 logger = logging.getLogger(__name__)
 
 class Translator(object):
