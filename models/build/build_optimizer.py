@@ -12,8 +12,7 @@ from models.layers.bert import BertLayerNorm
 logger = logging.getLogger(__name__)
 
 def prep_optimizer(cfg, model):
-    # based on:
-    # https://github.com/karpathy/minGPT/blob/3ed14b2cec0dfdad3f4b2831f2b4a86d11aef150/mingpt/model.py#L136
+
     if hasattr(model, 'module'):
         model = model.module
 
@@ -34,7 +33,7 @@ def prep_optimizer(cfg, model):
         "caption_head.cap_sa_decoder.word_embeddings",
         "caption_head.prediction_head.decoder",
     ]
-    encoder = ['Encoder_layer.entity_level',]
+    encoder = ['Encoder_layer.entity_level','AugInformation.object_track.bilstm']
     whitelist_weight_modules = (nn.Linear, nn.MultiheadAttention, nn.Conv2d)
     blacklist_weight_modules = (nn.LayerNorm, nn.BatchNorm2d, nn.Embedding, BertLayerNorm)
     # param_dict = {}
