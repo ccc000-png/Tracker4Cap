@@ -23,11 +23,6 @@ class AGE(nn.Module):
 
         cosine_sim_matrix = torch.matmul(tgt_norm, tgt_norm.transpose(1, 2))  # (64, 8, 10)
 
-        # sim_min = cosine_sim_matrix.min()
-        # sim_max = cosine_sim_matrix.max()
-
-        # normalized_cosine_sim_matrix = (cosine_sim_matrix - sim_min) / (sim_max - sim_min)
-
         inverse_similarity_matrix = cosine_sim_matrix
         inverse_similarity_matrix = torch.tanh(inverse_similarity_matrix)
 

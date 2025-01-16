@@ -18,10 +18,13 @@ class AugEncoder(nn.Module):
 
         if objects is not None:
             ohidden_states = self.object_embeddings(objects)
-
-        object_hidden_states= self.object_track(vhidden_states, query_pos, self.track_objects, mask=None)
-
-        action_features = self.action_track(object_hidden_states)
-
+        if self.object_track is not None:
+            object_hidden_states= self.object_track(vhidden_states, query_pos, self.track_objects, mask=None)
+        else:
+            object_hidden_states = vhidden_states
+        if self.action_track is not None:
+            action_features = self.action_track(object_hidden_states)
+        else:
+            action_features = object_hidden_states
 
         return object_hidden_states, action_features
