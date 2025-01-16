@@ -14,7 +14,7 @@ def parse_opt():
     parser.add_argument('--num_gpu', type=int, default=1)
     parser.add_argument('--num_shards', type=int, default=1)
     parser.add_argument('--shard_id', type=int, default=0)
-    parser.add_argument('--init_method', default="tcp://localhost:2222")
+    parser.add_argument('--init_method', default="tcp://localhost:2223")
     parser.add_argument('--distributed', default=True)
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument("--local_rank", default=0, type=int, help="distribted training")
@@ -24,14 +24,14 @@ def parse_opt():
     """
     parser.add_argument('--loglevel', type=str, default='DEBUG',
                         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'])
-    parser.add_argument('--seed', type=int, default=1)
+    parser.add_argument('--seed', type=int, default=3)
     parser.add_argument('--drop_prob', type=float, default=0.5)
     parser.add_argument('--bsz', type=int, default=128, help='batch size')
     parser.add_argument('--sample_numb', type=int, default=15,
                         help='how many frames would you like to sample from a given video')
     parser.add_argument('--clip_name', type=str, default='clip_l14', help='which model you would like to train/test?')
     parser.add_argument('--Track', action='store_true')
-    parser.add_argument('--Base', type=int, default=1)
+    parser.add_argument('--Base', type=int, default=0)
     parser.add_argument('--Age', action='store_true')
     parser.add_argument('--fusion_object', action='store_true')
     parser.add_argument('--fusion_action', action='store_true')
@@ -40,17 +40,18 @@ def parse_opt():
     =========================Data Settings===========================
     """
     parser.add_argument('--dataset', type=str, default='msvd')
-    parser.add_argument('--train_type', type=str, default='bert')
+    parser.add_argument('--train_type', type=str, default='preprocess')
     parser.add_argument('--data_root', type=str,
-                        default='/media/hpc/2E6E6CAC7950C459/Track4Cap/data', help='all mavd and msrvtt')
+                        default='./data', help='all msvd and msrvtt')
     parser.add_argument('--checkpoints_dir', type=str, default='./result/checkpoints')
+    parser.add_argument('--save_checkpoints', type=str, default='./result/checkpoints')
     parser.add_argument('--log_dir', type=str, default='./log/experiment')
     parser.add_argument('--log_freq', type=int, default=1)
 
     """
     =========================Encoder Settings===========================
     """
-    parser.add_argument('--visual_dim', type=int, default=768, help='dimention for inceptionresnetv2=2048,clip=512')
+    parser.add_argument('--visual_dim', type=int, default=768, help='dimention for inceptionresnetv2=2048,clip=512/768')
     parser.add_argument('--object_dim', type=int, default=None, help='if,use pretrained, object dimention for vg_objects')
     parser.add_argument('--track_objects', type=int, default=8)
     parser.add_argument('--hidden_dim', type=int, default=512)
@@ -104,9 +105,19 @@ class TotalConfigs:
         self.Base = args.Base
 
         self.Age = args.Age
-        self.fusion_object = args.fusion_object
-        self.fusion_action = args.fusion_action
-
+        if self.Base ==0:
+            self.Track = True
+            args.Track = True
+        if self.Track:
+            self.fusion_object = args.fusion_object
+        else:
+            args.fusion_object = False
+            self.fusion_object = args.fusion_object
+        if self.Age:
+            self.fusion_action = args.fusion_action
+        else:
+            args.fusion_action = False
+            self.fusion_action = args.fusion_action
 
 class DataConfigs:
     def __init__(self, args):
@@ -134,7 +145,7 @@ class DataConfigs:
         self.language_dir = os.path.join(self.data_root, 'language')
 
         self.ann_root = os.path.join(self.language_dir, '{dataset}_caption.json'.format(dataset=args.dataset))
-        self.video_root = os.path.join('/media/hpc/39C3AC34579106FA/HGR_T2V/{dataset}'.format(dataset=args.dataset), 'videos')
+        self.video_root = os.path.join('./data/{dataset}'.format(dataset=args.dataset), 'videos')
 
         # dataset split part
         self.videos_split = os.path.join(self.data_root, 'splits/{}_{}_list.pkl'.format(self.dataset, '{}'))
@@ -174,12 +185,13 @@ class TrainingConfigs:
         self.grad_clip = args.grad_clip
         self.lr = args.lr
         self.max_epochs = args.max_epochs
+        self.save_checkpoints = args.save_checkpoints
         self.checkpoints_dir = os.path.join(args.checkpoints_dir,
                                      "{}/Track_{}_AGE_{}_Fusion_Track_{}_Fusion_AGE_{}_{}".format(args.dataset, args.Track, args.Age, args.fusion_object, args.fusion_action, get_timestamp()))
         self.save_checkpoints_path = os.path.join(self.checkpoints_dir,
                                                   '{clip_name}_epochs_{max_epochs}_lr_{lr}_max_objects_{mo}.ckpt'.format(
                                                       clip_name=args.clip_name,
-                                                      max_epochs=args.track_objects,
+                                                      max_epochs=args.max_epochs,
                                                       lr=args.lr,
                                                       mo=args.track_objects))
         if not os.path.exists(self.checkpoints_dir):
