@@ -40,7 +40,7 @@ The features of our model are extracted using pre-trained CLIP. To avoid network
 - `MSVD`
 - `MSRVTT`
 
-You can download our preprocessed data from [One Drive](https://1drv.ms/u/c/00263e242b1aba9a/ERHsLCd1i9JAu7scJ7tjCdwBREjiNziEWpoO1yuGQNe1_A?e=YWs9hW)), which follows the structure below:
+You can download our preprocessed data from [One Drive](https://1drv.ms/u/c/00263e242b1aba9a/ERHsLCd1i9JAu7scJ7tjCdwBREjiNziEWpoO1yuGQNe1_A?e=YWs9hW), which follows the structure below:
 
 ```
 └── data
