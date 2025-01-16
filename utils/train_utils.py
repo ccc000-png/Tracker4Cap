@@ -1,8 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2022/11/12 22:31
-# @Author  : Yaojie Shen
-# @Project : MM-Video
-# @File    : train_utils.py
 
 import datetime
 import hashlib
