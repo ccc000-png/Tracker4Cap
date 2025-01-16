@@ -14,7 +14,7 @@ from models.layers.clip import clip
 
 class CaptionDataset(Dataset):
     def __init__(self, cfgs, mode):
-        """1.获取文本信息"""
+        """1.get id"""
         self.mode = mode
         self.dataset_name = cfgs.data.dataset
         videos_split = cfgs.data.videos_split.format(mode)
@@ -22,7 +22,7 @@ class CaptionDataset(Dataset):
             video_ids = pickle.load(f)
         self.video_ids = video_ids
         # 获取训练、测试ids
-        """1.获取视觉特征"""
+        """1.get video"""
         self.visual_path = cfgs.data.visual_features
         self.objects_visual_path = cfgs.data.object_features.format(mode)
         sample_numb = cfgs.sample_numb
@@ -32,18 +32,11 @@ class CaptionDataset(Dataset):
         # visual dict
         for vid in tqdm(self.video_ids):
             temp_feat = np.load(os.path.join(self.visual_path, vid + '.npy'))
-            '''2014/4/2注释2行'''
+
             sampled_idxs = np.linspace(0, len(temp_feat) - 1, sample_numb, dtype=int)
             self.visual_dict[vid] = temp_feat[sampled_idxs]
 
-        # feature object dict
-        '''2014/4/2将object换成concept,同步改setting'''
-        # with h5py.File(self.objects_visual_path, 'r') as f:
-        #     for vid in tqdm(self.video_ids):
-        #         temp_feat = f[vid]['feats'][()]
-        #         self.objects_dict[vid] = temp_feat
-
-        """2.获取文本特征"""
+        """2.get ann"""
         self.max_words=cfgs.decoder.max_caption_len
         # msvd\msrvtt提取方式不同
         self.ann = json.load(open(cfgs.data.ann_root, 'r'))
@@ -72,6 +65,7 @@ class CaptionDataset(Dataset):
                     json_ref[item["video_id"]].append(item['caption'])
         self.json_ref = json_ref
 
+
     def __len__(self):
         return len(self.sentences)
 
@@ -81,7 +75,7 @@ class CaptionDataset(Dataset):
         # sentence = sentence_list[0]
         captions = sentence
         feature2d = self.visual_dict[video_id]
-        # objects = self.objects_dict[video_id]
+
 
         caption_ids = clip.tokenize(sentence, context_length=self.max_words, truncate=True)[0]
         caption_mask = torch.zeros(self.max_words, dtype=torch.long)

@@ -16,7 +16,7 @@ from models.layers.clip import clip
 
 class CaptionDatasetE2E(Dataset):
     def __init__(self, cfgs, mode,transform):
-        """1.获取文本信息"""
+        """1.get id"""
         self.mode = mode
 
         self.dataset_name = cfgs.data.dataset
@@ -84,7 +84,7 @@ class CaptionDatasetE2E(Dataset):
 
 def collate_fn_caption_e2e(batch):
     video, video_id, caption_ids, caption_mask, caption_labels, sentence = zip(*batch)
-    '''2014/4/2注释7行'''
+
     bsz = len(video)
 
     # video_feature = [item for item in video]
