@@ -65,7 +65,6 @@ class CaptionHead(nn.Module):
             attn_objects = attn_objects.sum(dim=-2)  # (bsz, sample_numb, hidden_dim)
             features = torch.cat([visual, attn_objects], dim=-1)
         else:
-           attn_objects=None
            features = visual
         if fusion_action:
             U_motion = self.Um(vp_features)
@@ -75,27 +74,36 @@ class CaptionHead(nn.Module):
             attn_motion = attn_weights * attn_feat
             attn_motion = attn_motion.sum(dim=-2)  # (bsz, sample_numb, hidden_dim)
             features = torch.cat([features, attn_motion], dim=-1)
-        else:
-           attn_motion = None
         output = self.linear_visual_layer(features) if hasattr(self, 'linear_visual_layer') else features
         context = torch.max(output, dim=1)[0]  # (bsz, hidden_dim)
         return context
 
     def forward(self, visual, objects, actions, input_ids, input_mask):
         assert input_ids.size(1) == self.cap_config.max_t_len, f"{input_ids.size(1)} vs {self.cap_config.max_t_len}"
-        context_feats = self.Fusion(visual, objects, actions, self.fusion_object, self.fusion_action)
-        context_feats=context_feats.unsqueeze(1)
-        input_types = torch.concat(
-            [
-                torch.full((visual.size(0), visual.size(1)),
-                           fill_value=1, dtype=torch.long, device=visual.device),
-                torch.full((context_feats.size(0), context_feats.size(1)),
-                           fill_value=0, dtype=torch.long, device=context_feats.device),
-                torch.full((input_ids.size(0), input_ids.size(1)),
-                           fill_value=2, dtype=torch.long, device=input_ids.device)
-            ], dim=1
-        )
-        visual_output = torch.cat([visual, context_feats], dim=1)
+        if self.fusion_object or self.fusion_action:
+            context_feats = self.Fusion(visual, objects, actions, self.fusion_object, self.fusion_action)
+            context_feats=context_feats.unsqueeze(1)
+            input_types = torch.concat(
+                [
+                    torch.full((visual.size(0), visual.size(1)),
+                               fill_value=1, dtype=torch.long, device=visual.device),
+                    torch.full((context_feats.size(0), context_feats.size(1)),
+                               fill_value=0, dtype=torch.long, device=context_feats.device),
+                    torch.full((input_ids.size(0), input_ids.size(1)),
+                               fill_value=2, dtype=torch.long, device=input_ids.device)
+                ], dim=1
+            )
+            visual_output = torch.cat([visual, context_feats], dim=1)
+        else:
+            input_types = torch.concat(
+                [
+                    torch.full((visual.size(0), visual.size(1)),
+                               fill_value=1, dtype=torch.long, device=visual.device),
+                    torch.full((input_ids.size(0), input_ids.size(1)),
+                               fill_value=2, dtype=torch.long, device=input_ids.device)
+                ], dim=1
+            )
+            visual_output = visual
         input_mask = torch.concat(
             [
                 torch.ones(size=(visual_output.size(0), visual_output.size(1)),
@@ -107,10 +115,6 @@ class CaptionHead(nn.Module):
         prediction_scores = self.prediction_head(hidden[:, -self.cap_config.max_t_len:])
         # logger.debug("GT  : %s", self.ids2text(input_ids))
         # logger.debug("Pred: %s", self.probability2text(prediction_scores))
-        # if self.step_counter % self.log_interval == 0:
-        #     logger.debug("GT  : %s", self.ids2text(input_ids))
-        #     logger.debug("Pred: %s", self.probability2text(prediction_scores))
-        # self.step_counter += 1
         return prediction_scores
 
 
